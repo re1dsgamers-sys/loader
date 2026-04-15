@@ -25,7 +25,7 @@ local games = {
 }
 
 local GAME_SCRIPTS = {
-	Rivals = "111690f677f4dd398f04d54e0e8085b7",
+	Rivals = "f734cbc6d30b72abe044a3fb60543345",
     Arsebal = "d1c8b9e7a0c8f2a5b3e4c6d8f9a1b2c3"
 }
 
@@ -92,7 +92,7 @@ end
 
 local function createUI()
     local Window = UI:CreateWindow({
-        Title = "Scylla",
+        Title = "Phantom Hub",
         SubTitle = "Loader",
         TabWidth = 160,
         Size = UDim2.fromOffset(580, 320),
@@ -140,7 +140,7 @@ local function createUI()
     })
 
     Window:SelectTab(1)
-    notify("Scylla", "Loader Has Loaded Successfully")
+    notify("Phantom Hub", "Loader Has Loaded Successfully")
     
     return Window
 end
