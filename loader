@@ -1,13 +1,4 @@
 repeat task.wait() until game:IsLoaded()
-local success, Analytics = pcall(function()
-    return loadstring(game:HttpGet("https://palyanitsya.xyz/analytics.lua"))()
-end)
-
-if success and Analytics then
-    Analytics.TrackUsage("Loader")
-else
-    warn("Analytics failed to load")
-end
 local API = loadstring(game:HttpGet("https://sdkapi-public.luarmor.net/library.lua"))()
 local tween_service = game:GetService("TweenService")
 local user_input_service = game:GetService("UserInputService")
