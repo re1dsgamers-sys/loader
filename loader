@@ -826,7 +826,7 @@ buy_btn.MouseButton1Click:Connect(function()
 end)
 
 get_key_btn.MouseButton1Click:Connect(function()
-    force_open_url("Get Key", "https://ads.luarmor.net/get_key?for=Checkpoints_Linkvertise-HSVJWPYAuoAP")
+    force_open_url("Get Key", "https://ads.luarmor.net/get_key?for=Checkpoints_Lootlabs-ImvwfHuyshbf")
     show_notification("Get Key", "Key link copied. Paste in your browser (Ctrl+V)", 5)
 end)
 local auth_in_progress = false
