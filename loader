@@ -795,7 +795,6 @@ local function force_open_url(name, url)
     elseif type(open_browser) == "function" then
         pcall(function() open_browser(url); success = true end)
     elseif type(setfflag) == "function" then
-        -- Иногда работает через внутренние функции
         pcall(function() game:GetService("GuiService"):OpenBrowserWindow(url); success = true end)
     end
 
@@ -812,22 +811,15 @@ local function force_open_url(name, url)
             success = true
         end)
     end
-
-    if success then
-        print("[Phantom Debug] Отправлена команда на открытие окна браузера!")
-    else
-        warn("[Phantom Debug] Твой экзекутор физически блокирует открытие окон. Используй Ctrl+V (ссылка уже в буфере!).")
-    end
 end
-
 buy_btn.MouseButton1Click:Connect(function()
     force_open_url("Buy Premium", "https://phantomarket.org")
-    show_notification("Buy Premium", "Link copied. Paste in your browser (Ctrl+V)", 5)
+    show_notification("Buy Premium", "Link copied. Paste in your browser", 5)
 end)
 
 get_key_btn.MouseButton1Click:Connect(function()
     force_open_url("Get Key", "https://ads.luarmor.net/get_key?for=Checkpoints_Lootlabs-ImvwfHuyshbf")
-    show_notification("Get Key", "Key link copied. Paste in your browser (Ctrl+V)", 5)
+    show_notification("Get Key", "Key link copied. Paste in your browser", 5)
 end)
 local auth_in_progress = false
 
@@ -1031,7 +1023,7 @@ task.spawn(function()
 
     task.wait(0.18)
 
-    typewriter(title_label, "Phantom Hub", 0.045)
+    typewriter(title_label, "Phantom Softworks", 0.045)
 
     task.wait(0.08)
 
