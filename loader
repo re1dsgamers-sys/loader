@@ -814,7 +814,7 @@ local function force_open_url(name, url)
 end
 buy_btn.MouseButton1Click:Connect(function()
     force_open_url("Buy Premium", "https://phantomarket.org")
-    show_notification("Premium Shop", " Shop Link copied. Paste in your browser", 5)
+    show_notification("Premium Shop", " ShopLink copied. Paste in your browser", 5)
 end)
 
 get_key_btn.MouseButton1Click:Connect(function()
@@ -989,14 +989,14 @@ end
 make_draggable(main_frame)
 
 task.spawn(function()
-   create_smooth_tween(shadow, {BackgroundTransparency = 0.6, Position = UDim2.new(0.5, 4, 0.5, 4), Size = UDim2.new(0, 400, 0, 309)}, 0.6)
+    create_smooth_tween(shadow, {BackgroundTransparency = 0.6, Position = UDim2.new(0.5, 4, 0.5, 4), Size = UDim2.new(0, 504, 0, 349)}, 0.6)
 
     create_smooth_tween(main_frame, {BackgroundTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, 0)}, 0.5)
     local main_stroke = main_frame:FindFirstChild("UIStroke")
     if main_stroke then
         create_smooth_tween(main_stroke, {Transparency = 0}, 0.5)
     end
-    create_bounce_tween(main_frame, {Size = UDim2.new(0, 500, 0, 360)}, 0.8)
+    create_bounce_tween(main_frame, {Size = UDim2.new(0, 600, 0, 350)}, 0.8)
 
     task.wait(0.25)
 
