@@ -828,11 +828,11 @@ local function force_open_url(name, url)
 end
 buy_btn.MouseButton1Click:Connect(function()
     force_open_url("Buy Premium", "https://phantomarket.org")
-    show_notification("Premium Shop", " ShopLink copied. Paste in your browser", 5)
+    show_notification("Premium Shop", " Shop link copied. Paste in your browser", 5)
 end)
 
 get_key_btn.MouseButton1Click:Connect(function()
-    force_open_url("Get Key", "https://ads.luarmor.net/get_key?for=Checkpoints_Lootlabs-ImvwfHuyshbf")
+    force_open_url("Get Key", "https://ads.luarmor.net/get_key?for=Checkpoints_Linkvertise-HSVJWPYAuoAP")
     show_notification("Get Key", "Key link copied. Paste in your browser", 5)
 end)
 local auth_in_progress = false
