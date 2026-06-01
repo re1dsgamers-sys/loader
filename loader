@@ -52,7 +52,7 @@ local GAME_SCRIPTS = {
     ["BladeBall"] = "f4b067ed49f105456b6b3900bc1a4ef9",
     ["SailorPiece"] = "66387fa15569b822d2ea55a5faabe87c",
     ["SlimeRNG"] = "7a8b76f35bce8a800da3cd7aad830bcd",
-    ["TypeSoul"] = "270d43e73dacaf77cc8105bb2fc10844",
+    ["TypeSoul"] = "5f6af3cb21fee478aa17493db9e1853b",
     ["Default"] = "18fa0aa2984290b5582813fe581dd4cf"
 }
 
