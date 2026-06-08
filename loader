@@ -99,7 +99,7 @@ local function get_script_id()
         or pid == 88570549485653 or pid == 18214402201 or pid == 17497925847
         or pid == 85663041002311 or pid == 126276657485357 or pid == 116052447681870
         or pid == 79007765026427 or pid == 121766282797354 or pid == 115509275831248
-        or pid == 108123877604820 or pid == 122291183918016 or pid == 138059541435332 then
+        or pid == 108123877604820 or pid == 122291183918016 or pid == 138059541435332 or pid == 18637069183 then
         return GAME_SCRIPTS["TypeSoul"]
     end
     return GAME_SCRIPTS["Default"]
