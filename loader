@@ -69,7 +69,7 @@ local KEYLESS_PLACE_IDS = {
 
 local function get_script_id()
     local pid = game.PlaceId
-    if pid == 17625359962 or pid == 18126510175 or pid == 71874690745115 or pid == 117398147513099 or pid 129604661913557 then
+    if pid == 17625359962 or pid == 18126510175 or pid == 71874690745115 or pid == 117398147513099 or pid == 129604661913557 then
         return GAME_SCRIPTS["Rivals"]
     elseif pid == 136801880565837 or pid == 4902182837 then
         return GAME_SCRIPTS["Flick"]
