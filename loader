@@ -772,7 +772,7 @@ buy_btn.MouseButton1Click:Connect(function()
 end)
 
 get_key_btn.MouseButton1Click:Connect(function()
-    open_url("https://ads.luarmor.net/get_key?for=Checkpoints_WorkInk-pZVgaypmBHQw")
+    open_url("https://ads.luarmor.net/get_key?for=Checkpoints_Linkvertise-HSVJWPYAuoAP")
     show_notification("Get Key", "Key link copied. Paste in your browser", 5)
 end)
 
