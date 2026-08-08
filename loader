@@ -1,49 +1,35 @@
 repeat task.wait() until game:IsLoaded()
-local API = loadstring(game:HttpGet("https://sdkapi-public.luarmor.net/library.lua"))()
-local tween_service = game:GetService("TweenService")
-local user_input_service = game:GetService("UserInputService")
-local core_gui = game:GetService("CoreGui")
-local players = game:GetService("Players")
-local local_player = players.LocalPlayer
 
-local function create_instance(class_name, properties, children)
-    local instance = Instance.new(class_name)
-    for key, value in pairs(properties) do instance[key] = value end
-    if children then for _, child in pairs(children) do child.Parent = instance end end
-    return instance
+local sdk = loadstring(game:HttpGet("https://sdkapi-public.luarmor.net/library.lua"))()
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local me = Players.LocalPlayer
+
+local function new(class, props, kids)
+    local obj = Instance.new(class)
+    for k, v in pairs(props) do
+        obj[k] = v
+    end
+    if kids then
+        for _, kid in pairs(kids) do
+            kid.Parent = obj
+        end
+    end
+    return obj
 end
 
-local function create_tween(instance, properties, duration, easing_style, easing_direction)
+local function tween(obj, props, dur, ease, dir)
     local info = TweenInfo.new(
-        duration or 0.3,
-        easing_style or Enum.EasingStyle.Quart,
-        easing_direction or Enum.EasingDirection.Out
+        dur or 0.3,
+        ease or Enum.EasingStyle.Quart,
+        dir or Enum.EasingDirection.Out
     )
-    local tween = tween_service:Create(instance, info, properties)
-    tween:Play()
-    return tween
-end
-
-local function create_bounce_tween(instance, properties, duration)
-    local info = TweenInfo.new(
-        duration or 0.5,
-        Enum.EasingStyle.Back,
-        Enum.EasingDirection.Out
-    )
-    local tween = tween_service:Create(instance, info, properties)
-    tween:Play()
-    return tween
-end
-
-local function create_smooth_tween(instance, properties, duration)
-    local info = TweenInfo.new(
-        duration or 0.4,
-        Enum.EasingStyle.Exponential,
-        Enum.EasingDirection.Out
-    )
-    local tween = tween_service:Create(instance, info, properties)
-    tween:Play()
-    return tween
+    local t = TweenService:Create(obj, info, props)
+    t:Play()
+    return t
 end
 
 local GAME_SCRIPTS = {
@@ -56,7 +42,7 @@ local GAME_SCRIPTS = {
     ["Default"] = "18fa0aa2984290b5582813fe581dd4cf"
 }
 
-local function get_script_id()
+local function detectGame()
     local pid = game.PlaceId
     if pid == 17625359962 or pid == 18126510175 or pid == 71874690745115 or pid == 117398147513099 or pid == 129604661913557 then
         return GAME_SCRIPTS["Rivals"]
@@ -94,27 +80,27 @@ local function get_script_id()
     return GAME_SCRIPTS["Default"]
 end
 
-API.script_id = get_script_id()
+sdk.script_id = detectGame()
 
-local ACTOR_RUN = rawget(getfenv(0), "run_on_actor")
-local ACTOR_GET = rawget(getfenv(0), "getactors") or rawget(getfenv(0), "get_actors")
-local ACTOR_AVAILABLE = typeof(ACTOR_RUN) == "function" and typeof(ACTOR_GET) == "function"
+local actorRun = rawget(getfenv(0), "run_on_actor")
+local actorGet = rawget(getfenv(0), "getactors") or rawget(getfenv(0), "get_actors")
+local hasActors = typeof(actorRun) == "function" and typeof(actorGet) == "function"
 
-local function pick_actor()
-    if not ACTOR_AVAILABLE then return nil end
-    local ok, actors = pcall(ACTOR_GET)
-    if not ok or type(actors) ~= "table" then return nil end
-    for _, actor in ipairs(actors) do
-        if typeof(actor) == "Instance" and actor:IsA("Actor") and actor.Parent then
-            return actor
+local function findActor()
+    if not hasActors then return nil end
+    local ok, list = pcall(actorGet)
+    if not ok or type(list) ~= "table" then return nil end
+    for _, a in ipairs(list) do
+        if typeof(a) == "Instance" and a:IsA("Actor") and a.Parent then
+            return a
         end
     end
     return nil
 end
 
-local function run_on_actor(source, key)
-    if not source or source == "" then return false, "empty source" end
-    local actor = pick_actor()
+local function runOnActor(src, key)
+    if not src or src == "" then return false, "empty source" end
+    local actor = findActor()
     if not actor then return false, "no actor" end
     local wrapper = [[
         local src, key = ...
@@ -128,47 +114,47 @@ local function run_on_actor(source, key)
         if not ok then warn("[Loader][Actor] " .. tostring(err)) end
     ]]
     local ok, err = pcall(function()
-        ACTOR_RUN(actor, wrapper, source, key or "")
+        actorRun(actor, wrapper, src, key or "")
     end)
     if ok then return true end
     return false, tostring(err)
 end
 
-local function fetch_script_source(hash)
+local function fetchSource(hash)
     if not hash or hash == "" then return nil, "empty hash" end
     local url = "https://api.luarmor.net/files/v3/loaders/" .. tostring(hash) .. ".lua"
-    local ok, source = pcall(function() return game:HttpGet(url) end)
-    if ok and type(source) == "string" and #source > 0 then
-        return source
+    local ok, src = pcall(function() return game:HttpGet(url) end)
+    if ok and type(src) == "string" and #src > 0 then
+        return src
     end
-    return nil, tostring(source)
+    return nil, tostring(src)
 end
 
-local function load_script(key)
-    local hash = API.script_id
-    local source = fetch_script_source(hash)
-    if source then
-        local actor_ok = run_on_actor(source, key)
-        if actor_ok then return true end
+local function loadScript(key)
+    local hash = sdk.script_id
+    local src = fetchSource(hash)
+    if src then
+        local actorOk = runOnActor(src, key)
+        if actorOk then return true end
 
         if key and key ~= "" then
             pcall(function() getgenv().script_key = key end)
         end
-        local direct_ok = pcall(function()
-            local chunk = loadstring(source)
+        local directOk = pcall(function()
+            local chunk = loadstring(src)
             if chunk then chunk() end
         end)
-        if direct_ok then return true end
+        if directOk then return true end
     end
 
-    local ok = pcall(function() API.load_script() end)
+    local ok = pcall(function() sdk.load_script() end)
     return ok
 end
 
 local KEY_FOLDER = "KEY"
 local KEY_FILE = KEY_FOLDER .. "/key.txt"
 
-local function has_file_api()
+local function hasFileApi()
     return typeof(isfile) == "function"
         and typeof(readfile) == "function"
         and typeof(writefile) == "function"
@@ -176,23 +162,23 @@ local function has_file_api()
         and typeof(makefolder) == "function"
 end
 
-local function ensure_key_folder()
-    if not has_file_api() then return end
+local function ensureKeyFolder()
+    if not hasFileApi() then return end
     pcall(function()
         if not isfolder(KEY_FOLDER) then makefolder(KEY_FOLDER) end
     end)
 end
 
-local function save_key(key)
-    if not has_file_api() or not key or key == "" then return end
+local function saveKey(key)
+    if not hasFileApi() or not key or key == "" then return end
     pcall(function()
-        ensure_key_folder()
+        ensureKeyFolder()
         writefile(KEY_FILE, key)
     end)
 end
 
-local function load_saved_key()
-    if not has_file_api() then return nil end
+local function loadSavedKey()
+    if not hasFileApi() then return nil end
     local ok, content = pcall(function()
         if isfile(KEY_FILE) then return readfile(KEY_FILE) end
         return nil
@@ -204,8 +190,8 @@ local function load_saved_key()
     return nil
 end
 
-local function delete_saved_key()
-    if not has_file_api() then return end
+local function deleteSavedKey()
+    if not hasFileApi() then return end
     pcall(function()
         if isfile(KEY_FILE) and typeof(delfile) == "function" then
             delfile(KEY_FILE)
@@ -213,7 +199,7 @@ local function delete_saved_key()
     end)
 end
 
-ensure_key_folder()
+ensureKeyFolder()
 
 local Theme = {
     Background = Color3.fromRGB(14, 4, 6),
@@ -233,43 +219,43 @@ local Theme = {
     Error = Color3.fromRGB(255, 40, 40)
 }
 
-local is_mobile = user_input_service.TouchEnabled
-local MAIN_SIZE = is_mobile and UDim2.new(0, 420, 0, 250) or UDim2.new(0, 600, 0, 350)
-local SHADOW_SIZE = is_mobile and UDim2.new(0, 354, 0, 249) or UDim2.new(0, 504, 0, 349)
-local SUCCESS_SIZE = is_mobile and UDim2.new(0, 360, 0, 260) or UDim2.new(0, 520, 0, 360)
-local SIDEBAR_WIDTH = is_mobile and 110 or 160
-local padding = is_mobile and 15 or 30
-local btn_height = is_mobile and 28 or 38
+local isMobile = UserInputService.TouchEnabled
+local MAIN_SIZE = isMobile and UDim2.new(0, 420, 0, 250) or UDim2.new(0, 600, 0, 350)
+local SHADOW_SIZE = isMobile and UDim2.new(0, 420, 0, 250) or UDim2.new(0, 600, 0, 350)
+local SUCCESS_SIZE = isMobile and UDim2.new(0, 360, 0, 260) or UDim2.new(0, 520, 0, 360)
+local SIDEBAR_WIDTH = isMobile and 110 or 160
+local pad = isMobile and 15 or 30
+local btnHeight = isMobile and 28 or 38
 
-local y_username = is_mobile and 65 or 110
-local y_key = is_mobile and 100 or 158
-local y_login = is_mobile and 135 or 205
-local y_getkey = is_mobile and 170 or 253
-local y_buy = is_mobile and 205 or 299
+local yUsername = isMobile and 65 or 110
+local yKey = isMobile and 100 or 158
+local yLogin = isMobile and 135 or 205
+local yGetKey = isMobile and 170 or 253
+local yBuy = isMobile and 205 or 299
 
-local function typewriter(label, full_text, base_delay)
-    local d = base_delay or 0.035
-    for i = 1, #full_text do
+local function typeText(label, fullText, baseDelay)
+    local delay = baseDelay or 0.035
+    for i = 1, #fullText do
         if not label or not label.Parent then return end
-        label.Text = string.sub(full_text, 1, i)
-        local c = string.sub(full_text, i, i)
+        label.Text = string.sub(fullText, 1, i)
+        local c = string.sub(fullText, i, i)
         if c == " " then
-            task.wait(d * 0.5)
+            task.wait(delay * 0.5)
         elseif c == "," or c == "." then
-            task.wait(d * 2.5)
+            task.wait(delay * 2.5)
         else
-            task.wait(d + (math.random() * 0.012))
+            task.wait(delay + (math.random() * 0.012))
         end
     end
 end
 
-local function show_notification(title_text, message_text, display_duration)
-    local screen = core_gui:FindFirstChild("PhantomLoader")
+local function notify(title, msg, time)
+    local screen = CoreGui:FindFirstChild("PhantomLoader")
     if not screen then return end
 
     local container = screen:FindFirstChild("NotifContainer")
     if not container then
-        container = create_instance("Frame", {
+        container = new("Frame", {
             Name = "NotifContainer",
             Parent = screen,
             BackgroundTransparency = 1,
@@ -277,7 +263,7 @@ local function show_notification(title_text, message_text, display_duration)
             Size = UDim2.new(0, 300, 1, 0),
             AnchorPoint = Vector2.new(1, 1)
         }, {
-            create_instance("UIListLayout", {
+            new("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 VerticalAlignment = Enum.VerticalAlignment.Bottom,
                 Padding = UDim.new(0, 8)
@@ -285,9 +271,9 @@ local function show_notification(title_text, message_text, display_duration)
         })
     end
 
-    local dur = display_duration or 3
+    local duration = time or 3
 
-    local notif = create_instance("Frame", {
+    local card = new("Frame", {
         Parent = container,
         BackgroundColor3 = Theme.Background,
         Size = UDim2.new(1, 0, 0, 0),
@@ -295,42 +281,42 @@ local function show_notification(title_text, message_text, display_duration)
         ClipsDescendants = true,
         BackgroundTransparency = 0.3
     }, {
-        create_instance("UICorner", {CornerRadius = UDim.new(0, 6)}),
-        create_instance("UIStroke", {Color = Theme.Border, Thickness = 1, Transparency = 0.5}),
-        create_instance("Frame", {
+        new("UICorner", {CornerRadius = UDim.new(0, 6)}),
+        new("UIStroke", {Color = Theme.Border, Thickness = 1, Transparency = 0.5}),
+        new("Frame", {
             Name = "AccentBar",
             BackgroundColor3 = Theme.Accent,
             Position = UDim2.new(0, 0, 0, 0),
             Size = UDim2.new(0, 3, 0, 0),
             BorderSizePixel = 0
         }),
-        create_instance("Frame", {
+        new("Frame", {
             Name = "TimerBar",
-            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+            BackgroundColor3 = Theme.AccentGlow,
             BackgroundTransparency = 0.75,
             Position = UDim2.new(0, 0, 1, -2),
             Size = UDim2.new(1, 0, 0, 2),
             BorderSizePixel = 0
         }),
-        create_instance("TextLabel", {
+        new("TextLabel", {
             Name = "Title",
             BackgroundTransparency = 1,
             Position = UDim2.new(0, 14, 0, 10),
             Size = UDim2.new(1, -26, 0, 20),
             Font = Enum.Font.GothamBold,
-            Text = title_text or "Notification",
+            Text = title or "Notification",
             TextColor3 = Theme.Text,
             TextSize = 13,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextTransparency = 1
         }),
-        create_instance("TextLabel", {
+        new("TextLabel", {
             Name = "Desc",
             BackgroundTransparency = 1,
             Position = UDim2.new(0, 14, 0, 28),
             Size = UDim2.new(1, -26, 0, 20),
             Font = Enum.Font.Gotham,
-            Text = message_text or "",
+            Text = msg or "",
             TextColor3 = Theme.Text,
             TextSize = 12,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -338,67 +324,67 @@ local function show_notification(title_text, message_text, display_duration)
         })
     })
 
-    create_smooth_tween(notif, {Size = UDim2.new(1, 0, 0, 60), BackgroundTransparency = 0}, 0.4)
+    tween(card, {Size = UDim2.new(1, 0, 0, 60), BackgroundTransparency = 0}, 0.4, Enum.EasingStyle.Exponential)
 
-    local title_el = notif:FindFirstChild("Title")
-    local desc_el = notif:FindFirstChild("Desc")
-    local accent_bar = notif:FindFirstChild("AccentBar")
-    local timer_bar = notif:FindFirstChild("TimerBar")
-    local stroke = notif:FindFirstChild("UIStroke")
+    local titleLabel = card:FindFirstChild("Title")
+    local descLabel = card:FindFirstChild("Desc")
+    local accentBar = card:FindFirstChild("AccentBar")
+    local timerBar = card:FindFirstChild("TimerBar")
+    local stroke = card:FindFirstChild("UIStroke")
 
     task.delay(0.15, function()
-        if title_el and title_el.Parent then
-            create_smooth_tween(title_el, {TextTransparency = 0}, 0.35)
+        if titleLabel and titleLabel.Parent then
+            tween(titleLabel, {TextTransparency = 0}, 0.35, Enum.EasingStyle.Exponential)
         end
     end)
     task.delay(0.22, function()
-        if desc_el and desc_el.Parent then
-            create_smooth_tween(desc_el, {TextTransparency = 0}, 0.35)
+        if descLabel and descLabel.Parent then
+            tween(descLabel, {TextTransparency = 0}, 0.35, Enum.EasingStyle.Exponential)
         end
     end)
     task.delay(0.1, function()
-        if accent_bar and accent_bar.Parent then
-            create_smooth_tween(accent_bar, {Size = UDim2.new(0, 3, 1, 0)}, 0.6)
+        if accentBar and accentBar.Parent then
+            tween(accentBar, {Size = UDim2.new(0, 3, 1, 0)}, 0.6, Enum.EasingStyle.Exponential)
         end
     end)
     if stroke then
-        create_smooth_tween(stroke, {Transparency = 0}, 0.4)
+        tween(stroke, {Transparency = 0}, 0.4, Enum.EasingStyle.Exponential)
     end
 
     task.delay(0.4, function()
-        if timer_bar and timer_bar.Parent then
-            local ti = TweenInfo.new(dur - 0.4, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-            tween_service:Create(timer_bar, ti, {Size = UDim2.new(0, 0, 0, 2)}):Play()
+        if timerBar and timerBar.Parent then
+            local info = TweenInfo.new(duration - 0.4, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+            TweenService:Create(timerBar, info, {Size = UDim2.new(0, 0, 0, 2)}):Play()
         end
     end)
 
-    task.delay(dur, function()
-        if notif and notif.Parent then
-            if title_el and title_el.Parent then
-                create_tween(title_el, {TextTransparency = 1}, 0.2)
+    task.delay(duration, function()
+        if card and card.Parent then
+            if titleLabel and titleLabel.Parent then
+                tween(titleLabel, {TextTransparency = 1}, 0.2)
             end
-            if desc_el and desc_el.Parent then
-                create_tween(desc_el, {TextTransparency = 1}, 0.2)
+            if descLabel and descLabel.Parent then
+                tween(descLabel, {TextTransparency = 1}, 0.2)
             end
-            if accent_bar and accent_bar.Parent then
-                create_tween(accent_bar, {Size = UDim2.new(0, 3, 0, 0), BackgroundTransparency = 1}, 0.25)
+            if accentBar and accentBar.Parent then
+                tween(accentBar, {Size = UDim2.new(0, 3, 0, 0), BackgroundTransparency = 1}, 0.25)
             end
 
             task.wait(0.12)
 
-            if notif and notif.Parent then
-                create_tween(notif, {BackgroundTransparency = 1}, 0.2)
+            if card and card.Parent then
+                tween(card, {BackgroundTransparency = 1}, 0.2)
                 if stroke and stroke.Parent then
-                    create_tween(stroke, {Transparency = 1}, 0.2)
+                    tween(stroke, {Transparency = 1}, 0.2)
                 end
 
                 task.wait(0.1)
 
-                if notif and notif.Parent then
-                    create_smooth_tween(notif, {Size = UDim2.new(1, 0, 0, 0)}, 0.3)
+                if card and card.Parent then
+                    tween(card, {Size = UDim2.new(1, 0, 0, 0)}, 0.3, Enum.EasingStyle.Exponential)
                     task.wait(0.35)
-                    if notif and notif.Parent then
-                        notif:Destroy()
+                    if card and card.Parent then
+                        card:Destroy()
                     end
                 end
             end
@@ -406,53 +392,54 @@ local function show_notification(title_text, message_text, display_duration)
     end)
 end
 
-if core_gui:FindFirstChild("PhantomLoader") then
-    core_gui.PhantomLoader:Destroy()
+if CoreGui:FindFirstChild("PhantomLoader") then
+    CoreGui.PhantomLoader:Destroy()
 end
 
-local screen_gui = create_instance("ScreenGui", {
+local screenGui = new("ScreenGui", {
     Name = "PhantomLoader",
-    Parent = core_gui
+    Parent = CoreGui
 })
 
-local shadow = create_instance("Frame", {
+local shadow = new("Frame", {
     Name = "Shadow",
-    Parent = screen_gui,
+    Parent = screenGui,
     BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-    Position = UDim2.new(0.5, 4, 0.5, 24),
-    Size = UDim2.new(0, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0.5, 0, 0.5, 6),
+    Size = MAIN_SIZE,
     AnchorPoint = Vector2.new(0.5, 0.5),
     BorderSizePixel = 0,
-    BackgroundTransparency = 1
+    ZIndex = 0
 }, {
-    create_instance("UICorner", {CornerRadius = UDim.new(0, 12)})
+    new("UICorner", {CornerRadius = UDim.new(0, 8)})
 })
 
-local main_frame = create_instance("Frame", {
+local mainFrame = new("Frame", {
     Name = "MainFrame",
-    Parent = screen_gui,
+    Parent = screenGui,
     BackgroundColor3 = Theme.Background,
     Position = UDim2.new(0.5, 0, 0.5, 20),
     Size = UDim2.new(0, 0, 0, 0),
     AnchorPoint = Vector2.new(0.5, 0.5),
     BorderSizePixel = 0,
     BackgroundTransparency = 1,
-    ClipsDescendants = true
+    ZIndex = 1
 }, {
-    create_instance("UICorner", {CornerRadius = UDim.new(0, 10)}),
-    create_instance("UIStroke", {Color = Theme.Border, Thickness = 1.5, Transparency = 1})
+    new("UICorner", {CornerRadius = UDim.new(0, 6)}),
+    new("UIStroke", {Color = Theme.Border, Thickness = 1.5, Transparency = 1})
 })
 
-local sidebar = create_instance("Frame", {
+local sidebar = new("Frame", {
     Name = "Sidebar",
-    Parent = main_frame,
+    Parent = mainFrame,
     BackgroundColor3 = Theme.Sidebar,
     Size = UDim2.new(0, SIDEBAR_WIDTH, 1, 0),
     BorderSizePixel = 0,
     BackgroundTransparency = 1
 }, {
-    create_instance("UICorner", {CornerRadius = UDim.new(0, 10)}),
-    create_instance("Frame", {
+    new("UICorner", {CornerRadius = UDim.new(0, 6)}),
+    new("Frame", {
         Name = "Divider",
         BackgroundColor3 = Theme.TitleBarLine,
         Position = UDim2.new(1, -1, 0, 10),
@@ -462,168 +449,205 @@ local sidebar = create_instance("Frame", {
     })
 })
 
-local avatar_container = create_instance("Frame", {
+local avatarContainer = new("Frame", {
     Parent = sidebar,
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, 0, 0, is_mobile and 15 or 40),
-    Size = UDim2.new(1, 0, 0, is_mobile and 70 or 100)
+    Position = UDim2.new(0, 0, 0, isMobile and 15 or 40),
+    Size = UDim2.new(1, 0, 0, isMobile and 70 or 100)
 }, {
-    create_instance("ImageLabel", {
+    new("ImageLabel", {
         Name = "Avatar",
         BackgroundTransparency = 1,
-        Position = is_mobile and UDim2.new(0.5, -20, 0, 0) or UDim2.new(0.5, -30, 0, 0),
-        Size = is_mobile and UDim2.new(0, 40, 0, 40) or UDim2.new(0, 60, 0, 60),
+        Position = isMobile and UDim2.new(0.5, -20, 0, 0) or UDim2.new(0.5, -30, 0, 0),
+        Size = isMobile and UDim2.new(0, 40, 0, 40) or UDim2.new(0, 60, 0, 60),
         Image = "rbxassetid://0",
         ImageTransparency = 1
     }, {
-        create_instance("UICorner", {CornerRadius = UDim.new(1, 0)}),
-        create_instance("UIStroke", {Color = Theme.TitleBarLine, Thickness = 2, Transparency = 1})
+        new("UICorner", {CornerRadius = UDim.new(1, 0)}),
+        new("UIStroke", {Color = Theme.TitleBarLine, Thickness = 2, Transparency = 1})
     })
 })
 
 task.spawn(function()
-    local success, thumb = pcall(function()
-        return players:GetUserThumbnailAsync(
-            local_player.UserId,
+    local ok, thumb = pcall(function()
+        return Players:GetUserThumbnailAsync(
+            me.UserId,
             Enum.ThumbnailType.AvatarBust,
             Enum.ThumbnailSize.Size420x420
         )
     end)
-    if success then avatar_container.Avatar.Image = thumb end
+    if ok then avatarContainer.Avatar.Image = thumb end
 end)
 
-local content = create_instance("Frame", {
-    Parent = main_frame,
+local content = new("Frame", {
+    Parent = mainFrame,
     BackgroundTransparency = 1,
     Position = UDim2.new(0, SIDEBAR_WIDTH, 0, 0),
     Size = UDim2.new(1, -SIDEBAR_WIDTH, 1, 0)
 })
 
-local title_label = create_instance("TextLabel", {
+local titleLabel = new("TextLabel", {
     Name = "TitleLabel",
     Parent = content,
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, padding, 0, is_mobile and 12 or 40),
-    Size = UDim2.new(1, -padding*2, 0, is_mobile and 20 or 30),
+    Position = UDim2.new(0, pad, 0, isMobile and 12 or 40),
+    Size = UDim2.new(1, -pad * 2, 0, isMobile and 20 or 30),
     Font = Enum.Font.GothamBold,
     Text = "",
     TextColor3 = Theme.Text,
-    TextSize = is_mobile and 15 or 20,
+    TextSize = isMobile and 15 or 20,
     TextXAlignment = Enum.TextXAlignment.Left
 })
 
-local welcome_label = create_instance("TextLabel", {
+local welcomeLabel = new("TextLabel", {
     Name = "WelcomeLabel",
     Parent = content,
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, padding, 0, is_mobile and 34 or 65),
-    Size = UDim2.new(1, -padding*2, 0, 20),
+    Position = UDim2.new(0, pad, 0, isMobile and 34 or 65),
+    Size = UDim2.new(1, -pad * 2, 0, 20),
     Font = Enum.Font.Gotham,
     Text = "",
     TextColor3 = Theme.Text,
-    TextSize = is_mobile and 11 or 13,
+    TextSize = isMobile and 11 or 13,
     TextXAlignment = Enum.TextXAlignment.Left
 })
 
-local function create_styled_input(placeholder, y_pos, is_password)
-    local input_container = create_instance("Frame", {
+local function buildInput(placeholder, yPos, isPassword)
+    local container = new("Frame", {
         Parent = content,
         BackgroundColor3 = Theme.Input,
-        Position = UDim2.new(0, padding, 0, y_pos),
-        Size = UDim2.new(1, -padding*2, 0, btn_height),
+        Position = UDim2.new(0, pad, 0, yPos),
+        Size = UDim2.new(1, -pad * 2, 0, btnHeight),
         BorderSizePixel = 0,
         BackgroundTransparency = 1
     }, {
-        create_instance("UICorner", {CornerRadius = UDim.new(0, 6)}),
-        create_instance("UIStroke", {Color = Theme.ElementBorder, Thickness = 1, Transparency = 1})
+        new("UICorner", {CornerRadius = UDim.new(0, 4)}),
+        new("UIStroke", {Color = Theme.ElementBorder, Thickness = 1, Transparency = 1})
     })
 
-    local textbox = create_instance("TextBox", {
-        Parent = input_container,
+    local input = new("TextBox", {
+        Parent = container,
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 12, 0, 0),
-        Size = UDim2.new(1, -24, 1, 0),
+        Size = UDim2.new(1, isPassword and -54 or -24, 1, 0),
         Font = Enum.Font.Gotham,
         Text = "",
         PlaceholderText = placeholder,
         PlaceholderColor3 = Theme.Placeholder,
         TextColor3 = Theme.Text,
-        TextSize = is_mobile and 11 or 13,
+        TextSize = isMobile and 11 or 13,
         TextXAlignment = Enum.TextXAlignment.Left,
         ClearTextOnFocus = false
     })
 
-    if is_password then
-        local mask = create_instance("TextLabel", {
-            Parent = input_container,
+    local mask
+    if isPassword then
+        mask = new("TextLabel", {
+            Parent = container,
             BackgroundTransparency = 1,
             Position = UDim2.new(0, 12, 0, 0),
-            Size = UDim2.new(1, -24, 1, 0),
+            Size = UDim2.new(1, -54, 1, 0),
             Font = Enum.Font.GothamBold,
             Text = "",
             TextColor3 = Theme.Text,
-            TextSize = is_mobile and 12 or 14,
+            TextSize = isMobile and 12 or 14,
             TextXAlignment = Enum.TextXAlignment.Left,
             ZIndex = 2
         })
-        textbox.TextTransparency = 1
-        textbox:GetPropertyChangedSignal("Text"):Connect(function()
-            mask.Text = string.rep("\226\128\162", #textbox.Text)
+        input.TextTransparency = 1
+        input:GetPropertyChangedSignal("Text"):Connect(function()
+            mask.Text = string.rep("\226\128\162", #input.Text)
         end)
     end
 
-    local focus_line = create_instance("Frame", {
+    local focusLine = new("Frame", {
         Name = "FocusLine",
-        Parent = input_container,
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        BackgroundTransparency = 0.6,
+        Parent = container,
+        BackgroundColor3 = Theme.AccentGlow,
+        BackgroundTransparency = 0,
         Position = UDim2.new(0.5, 0, 1, -2),
         AnchorPoint = Vector2.new(0.5, 0),
         Size = UDim2.new(0, 0, 0, 2),
         BorderSizePixel = 0
     })
 
-    textbox.Focused:Connect(function()
-        create_smooth_tween(input_container:FindFirstChild("UIStroke"), {Color = Color3.fromRGB(80, 80, 80), Thickness = 1.5}, 0.25)
-        create_smooth_tween(input_container, {BackgroundColor3 = Theme.InputFocus}, 0.25)
-        create_smooth_tween(focus_line, {Size = UDim2.new(0.9, 0, 0, 2)}, 0.35)
+    input.Focused:Connect(function()
+        tween(container:FindFirstChild("UIStroke"), {Color = Color3.fromRGB(150, 25, 40), Thickness = 1.5}, 0.25, Enum.EasingStyle.Exponential)
+        tween(container, {BackgroundColor3 = Theme.InputFocus}, 0.25, Enum.EasingStyle.Exponential)
+        tween(focusLine, {Size = UDim2.new(0.9, 0, 0, 2)}, 0.35, Enum.EasingStyle.Exponential)
     end)
-    textbox.FocusLost:Connect(function()
-        create_smooth_tween(input_container:FindFirstChild("UIStroke"), {Color = Theme.ElementBorder, Thickness = 1}, 0.35)
-        create_smooth_tween(input_container, {BackgroundColor3 = Theme.Input}, 0.35)
-        create_smooth_tween(focus_line, {Size = UDim2.new(0, 0, 0, 2)}, 0.3)
+    input.FocusLost:Connect(function()
+        tween(container:FindFirstChild("UIStroke"), {Color = Theme.ElementBorder, Thickness = 1}, 0.35, Enum.EasingStyle.Exponential)
+        tween(container, {BackgroundColor3 = Theme.Input}, 0.35, Enum.EasingStyle.Exponential)
+        tween(focusLine, {Size = UDim2.new(0, 0, 0, 2)}, 0.3, Enum.EasingStyle.Exponential)
     end)
 
-    return textbox, input_container
+    return input, container, mask
 end
 
-local user_input, user_input_container = create_styled_input("Username", y_username, false)
-user_input.Text = local_player.Name
-local key_input, key_input_container = create_styled_input("Enter License Key", y_key, true)
+local userInput, userInputContainer = buildInput("Username", yUsername, false)
+userInput.Text = me.Name
+local keyInput, keyInputContainer, keyMask = buildInput("Enter your key", yKey, true)
 
-local function create_button(text, y_pos, is_primary)
-    local btn = create_instance("TextButton", {
+local function showKey(visible)
+    keyInput.TextTransparency = visible and 0 or 1
+    if keyMask then keyMask.TextTransparency = visible and 1 or 0 end
+    tween(keyInputContainer:FindFirstChild("UIStroke"), {Color = visible and Theme.AccentGlow or Theme.ElementBorder, Thickness = visible and 1.5 or 1}, 0.2, Enum.EasingStyle.Exponential)
+end
+
+local EYE_CLOSED = "rbxassetid://138900484054687"
+local EYE_OPEN = "rbxassetid://122998546023164"
+
+local eyeBtn = new("ImageButton", {
+    Parent = keyInputContainer,
+    BackgroundTransparency = 1,
+    Position = UDim2.new(1, -36, 0.5, 0),
+    Size = UDim2.new(0, 24, 0, 24),
+    AnchorPoint = Vector2.new(0, 0.5),
+    Image = EYE_CLOSED,
+    ImageTransparency = 1,
+    ScaleType = Enum.ScaleType.Fit,
+    AutoButtonColor = false,
+    ZIndex = 3
+})
+
+eyeBtn.MouseEnter:Connect(function()
+    tween(eyeBtn, {ImageColor3 = Theme.AccentGlow}, 0.2, Enum.EasingStyle.Exponential)
+end)
+eyeBtn.MouseLeave:Connect(function()
+    tween(eyeBtn, {ImageColor3 = Color3.fromRGB(255, 255, 255)}, 0.2, Enum.EasingStyle.Exponential)
+end)
+
+local keyVisible = false
+eyeBtn.MouseButton1Click:Connect(function()
+    keyVisible = not keyVisible
+    showKey(keyVisible)
+    eyeBtn.Image = keyVisible and EYE_OPEN or EYE_CLOSED
+end)
+
+local function buildButton(text, yPos, isPrimary)
+    local btn = new("TextButton", {
         Parent = content,
-        BackgroundColor3 = is_primary and Theme.Accent or Theme.Background,
-        Position = UDim2.new(0, padding, 0, y_pos),
-        Size = UDim2.new(1, -padding*2, 0, btn_height),
+        BackgroundColor3 = isPrimary and Theme.Accent or Theme.Background,
+        Position = UDim2.new(0, pad, 0, yPos),
+        Size = UDim2.new(1, -pad * 2, 0, btnHeight),
         AutoButtonColor = false,
         Text = text,
         Font = Enum.Font.GothamBold,
         TextColor3 = Theme.Text,
-        TextSize = is_mobile and 11 or 13,
+        TextSize = isMobile and 11 or 13,
         BackgroundTransparency = 1,
         TextTransparency = 1,
         ClipsDescendants = true
     }, {
-        create_instance("UICorner", {CornerRadius = UDim.new(0, 6)}),
-        not is_primary and create_instance("UIStroke", {Color = Theme.ElementBorder, Thickness = 1, Transparency = 1}) or nil
+        new("UICorner", {CornerRadius = UDim.new(0, 4)}),
+        not isPrimary and new("UIStroke", {Color = Theme.ElementBorder, Thickness = 1, Transparency = 1}) or nil
     })
 
-    local underline = create_instance("Frame", {
+    local underline = new("Frame", {
         Name = "Underline",
         Parent = btn,
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundColor3 = Theme.AccentGlow,
         BackgroundTransparency = 0.5,
         Position = UDim2.new(0, 0, 1, -2),
         Size = UDim2.new(0, 0, 0, 2),
@@ -631,283 +655,283 @@ local function create_button(text, y_pos, is_primary)
     })
 
     btn.MouseEnter:Connect(function()
-        if is_primary then
-            create_smooth_tween(btn, {BackgroundTransparency = 0.15}, 0.2)
+        if isPrimary then
+            tween(btn, {BackgroundTransparency = 0.15}, 0.2, Enum.EasingStyle.Exponential)
         else
             local s = btn:FindFirstChild("UIStroke")
-            if s then create_smooth_tween(s, {Color = Color3.fromRGB(90, 90, 90)}, 0.25) end
+            if s then tween(s, {Color = Theme.AccentGlow}, 0.25, Enum.EasingStyle.Exponential) end
         end
-        create_smooth_tween(underline, {Size = UDim2.new(1, 0, 0, 2)}, 0.3)
+        tween(underline, {Size = UDim2.new(1, 0, 0, 2)}, 0.3, Enum.EasingStyle.Exponential)
     end)
 
     btn.MouseLeave:Connect(function()
-        if is_primary then
-            create_smooth_tween(btn, {BackgroundTransparency = 0}, 0.25)
+        if isPrimary then
+            tween(btn, {BackgroundTransparency = 0}, 0.25, Enum.EasingStyle.Exponential)
         else
             local s = btn:FindFirstChild("UIStroke")
-            if s then create_smooth_tween(s, {Color = Theme.ElementBorder}, 0.3) end
+            if s then tween(s, {Color = Theme.ElementBorder}, 0.3, Enum.EasingStyle.Exponential) end
         end
-        create_smooth_tween(underline, {Size = UDim2.new(0, 0, 0, 2)}, 0.25)
+        tween(underline, {Size = UDim2.new(0, 0, 0, 2)}, 0.25, Enum.EasingStyle.Exponential)
     end)
 
     return btn
 end
 
-local login_btn = create_button("Check Key", y_login, true)
-local get_key_btn = create_button("Get your free key", y_getkey, false)
-local buy_btn = create_button("Buy Premium", y_buy, false)
+local loginBtn = buildButton("Check Key", yLogin, true)
+local getKeyBtn = buildButton("Get your free key", yGetKey, false)
+local buyBtn = buildButton("Buy Premium", yBuy, false)
 
 task.spawn(function()
-    while buy_btn and buy_btn.Parent do
-        create_smooth_tween(buy_btn, {BackgroundColor3 = Color3.fromRGB(180, 30, 45), BackgroundTransparency = 0}, 1.5)
+    while buyBtn and buyBtn.Parent do
+        tween(buyBtn, {BackgroundColor3 = Color3.fromRGB(180, 30, 45), BackgroundTransparency = 0}, 1.5, Enum.EasingStyle.Exponential)
         task.wait(1.5)
-        if not buy_btn or not buy_btn.Parent then break end
-        create_smooth_tween(buy_btn, {BackgroundColor3 = Color3.fromRGB(60, 5, 12), BackgroundTransparency = 0}, 1.5)
+        if not buyBtn or not buyBtn.Parent then break end
+        tween(buyBtn, {BackgroundColor3 = Color3.fromRGB(60, 5, 12), BackgroundTransparency = 0}, 1.5, Enum.EasingStyle.Exponential)
         task.wait(1.5)
     end
 end)
 
-local scan_bar = create_instance("Frame", {
+local scanBar = new("Frame", {
     Name = "ScanBar",
-    Parent = login_btn,
-    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+    Parent = loginBtn,
+    BackgroundColor3 = Theme.AccentGlow,
     BackgroundTransparency = 1,
     Position = UDim2.new(-0.3, 0, 0, 0),
     Size = UDim2.new(0.3, 0, 1, 0),
     BorderSizePixel = 0,
     ZIndex = 2
 }, {
-    create_instance("UICorner", {CornerRadius = UDim.new(0, 6)})
+    new("UICorner", {CornerRadius = UDim.new(0, 4)})
 })
 
-local discord_btn = create_instance("TextButton", {
+local discordBtn = new("TextButton", {
     Parent = sidebar,
     BackgroundColor3 = Theme.Dialog,
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, 10, 0, is_mobile and 70 or 115),
-    Size = UDim2.new(1, -20, 0, is_mobile and 25 or 30),
+    Position = UDim2.new(0, 10, 0, isMobile and 70 or 115),
+    Size = UDim2.new(1, -20, 0, isMobile and 25 or 30),
     Text = "Join Our Discord",
     Font = Enum.Font.GothamBold,
     TextColor3 = Theme.Text,
-    TextSize = is_mobile and 10 or 12,
+    TextSize = isMobile and 10 or 12,
     AutoButtonColor = false,
     TextTransparency = 1
 }, {
-    create_instance("UICorner", {CornerRadius = UDim.new(0, 6)})
+    new("UICorner", {CornerRadius = UDim.new(0, 4)})
 })
 
-discord_btn.MouseEnter:Connect(function()
-    create_smooth_tween(discord_btn, {BackgroundTransparency = 0.2}, 0.25)
+discordBtn.MouseEnter:Connect(function()
+    tween(discordBtn, {BackgroundTransparency = 0.2}, 0.25, Enum.EasingStyle.Exponential)
 end)
-discord_btn.MouseLeave:Connect(function()
-    create_smooth_tween(discord_btn, {BackgroundTransparency = 0}, 0.3)
+discordBtn.MouseLeave:Connect(function()
+    tween(discordBtn, {BackgroundTransparency = 0}, 0.3, Enum.EasingStyle.Exponential)
 end)
 
-local function open_discord()
+local function openDiscord()
     if setclipboard then
         setclipboard("https://discord.gg/6S7gHAPg3A")
     end
-    show_notification("Discord", "Invite link copied to clipboard", 5)
+    notify("Discord", "Invite link copied to clipboard", 5)
     pcall(function()
         local inviter = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Discord%20Inviter/Source.lua"))()
         inviter.Join("https://discord.gg/6S7gHAPg3A")
     end)
 end
 
-discord_btn.MouseButton1Click:Connect(open_discord)
+discordBtn.MouseButton1Click:Connect(openDiscord)
 
-local function handle_error()
-    local stroke = main_frame:FindFirstChild("UIStroke")
-    if stroke then create_tween(stroke, {Color = Theme.Error, Thickness = 2.5}, 0.08) end
+local function errorShake()
+    local stroke = mainFrame:FindFirstChild("UIStroke")
+    if stroke then tween(stroke, {Color = Theme.Error, Thickness = 2.5}, 0.08) end
 
-    local original_pos = main_frame.Position
+    local start = mainFrame.Position
     for i = 1, 8 do
         local intensity = 6 * (1 - (i / 9))
         local shift = (i % 2 == 0) and intensity or -intensity
-        create_tween(main_frame, {
+        tween(mainFrame, {
             Position = UDim2.new(
-                original_pos.X.Scale, original_pos.X.Offset + shift,
-                original_pos.Y.Scale, original_pos.Y.Offset + (math.abs(shift) * 0.3)
+                start.X.Scale, start.X.Offset + shift,
+                start.Y.Scale, start.Y.Offset + (math.abs(shift) * 0.3)
             )
         }, 0.035, Enum.EasingStyle.Sine)
         task.wait(0.035)
     end
-    create_bounce_tween(main_frame, {Position = original_pos}, 0.4)
+    tween(mainFrame, {Position = start}, 0.4, Enum.EasingStyle.Back)
 
     task.wait(0.6)
-    if stroke then create_smooth_tween(stroke, {Color = Theme.Border, Thickness = 1.5}, 0.6) end
+    if stroke then tween(stroke, {Color = Theme.Border, Thickness = 1.5}, 0.6, Enum.EasingStyle.Exponential) end
 end
 
-local function open_url(url)
+local function openUrl(url)
     if setclipboard then
         setclipboard(url)
     end
 
-    local success = false
+    local opened = false
 
     if type(openBrowser) == "function" then
-        pcall(function() openBrowser(url); success = true end)
+        pcall(function() openBrowser(url); opened = true end)
     elseif type(open_browser) == "function" then
-        pcall(function() open_browser(url); success = true end)
+        pcall(function() open_browser(url); opened = true end)
     end
 
-    if not success then
+    if not opened then
         pcall(function()
             game:GetService("GuiService"):OpenBrowserWindow(url)
-            success = true
+            opened = true
         end)
     end
 
-    if not success and type(os) == "table" and type(os.execute) == "function" then
+    if not opened and type(os) == "table" and type(os.execute) == "function" then
         pcall(function()
             os.execute('start "" "' .. url .. '"')
-            success = true
+            opened = true
         end)
     end
 end
 
-buy_btn.MouseButton1Click:Connect(function()
-    open_url("https://phantomarket.org")
-    show_notification("Premium Shop", "Shop link copied. Paste in your browser", 5)
+buyBtn.MouseButton1Click:Connect(function()
+    openUrl("https://phantomarket.org")
+    notify("Premium Shop", "Shop link copied. Paste it in your browser", 5)
 end)
 
-get_key_btn.MouseButton1Click:Connect(function()
-    open_url("https://ads.luarmor.net/get_key?for=Checkpoints_Lootlabs-ImvwfHuyshbf")
-    show_notification("Get Key", "Key link copied. Paste in your browser", 5)
+getKeyBtn.MouseButton1Click:Connect(function()
+    openUrl("https://ads.luarmor.net/get_key?for=Checkpoints_Lootlabs-ImvwfHuyshbf")
+    notify("Key System", "Key link copied. Paste it in your browser", 5)
 end)
 
-local auth_in_progress = false
+local authInProgress = false
 
-local function perform_key_check(key, is_auto)
-    if auth_in_progress then return end
+local function checkKey(key, isAuto)
+    if authInProgress then return end
     if not key or key == "" then
-        handle_error()
-        show_notification("Warning", "Key is required", 2)
+        errorShake()
+        notify("Warning", "Key is required", 2)
         return
     end
-    auth_in_progress = true
+    authInProgress = true
 
-    login_btn.Text = "Authenticating..."
+    loginBtn.Text = "Authenticating..."
 
-    local scan_active = true
+    local scanActive = true
     task.spawn(function()
-        scan_bar.BackgroundTransparency = 0.82
-        while scan_active do
-            if scan_bar and scan_bar.Parent then
-                scan_bar.Position = UDim2.new(-0.3, 0, 0, 0)
-                local si = TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
-                local st = tween_service:Create(scan_bar, si, {Position = UDim2.new(1, 0, 0, 0)})
-                st:Play()
-                st.Completed:Wait()
+        scanBar.BackgroundTransparency = 0.82
+        while scanActive do
+            if scanBar and scanBar.Parent then
+                scanBar.Position = UDim2.new(-0.3, 0, 0, 0)
+                local info = TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+                local sweep = TweenService:Create(scanBar, info, {Position = UDim2.new(1, 0, 0, 0)})
+                sweep:Play()
+                sweep.Completed:Wait()
                 task.wait(0.15)
             else
                 break
             end
         end
-        if scan_bar and scan_bar.Parent then
-            scan_bar.BackgroundTransparency = 1
+        if scanBar and scanBar.Parent then
+            scanBar.BackgroundTransparency = 1
         end
     end)
 
     task.spawn(function()
-        local status = API.check_key(key)
-        scan_active = false
+        local status = sdk.check_key(key)
+        scanActive = false
 
         if status.code == "KEY_VALID" then
             getgenv().script_key = key
-            save_key(key)
-            show_notification("Success", "Key Validated! Loading...", 3)
+            saveKey(key)
+            notify("Success", "Key Validated! Loading...", 3)
 
-            if scan_bar and scan_bar.Parent then
-                create_smooth_tween(scan_bar, {Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 0.7}, 0.3)
+            if scanBar and scanBar.Parent then
+                tween(scanBar, {Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 0.7}, 0.3, Enum.EasingStyle.Exponential)
                 task.wait(0.2)
-                create_smooth_tween(scan_bar, {BackgroundTransparency = 1}, 0.3)
+                tween(scanBar, {BackgroundTransparency = 1}, 0.3, Enum.EasingStyle.Exponential)
             end
 
-            local stroke = main_frame:FindFirstChild("UIStroke")
+            local stroke = mainFrame:FindFirstChild("UIStroke")
             if stroke then
-                create_smooth_tween(stroke, {Color = Color3.fromRGB(80, 80, 80), Thickness = 2.5}, 0.3)
+                tween(stroke, {Color = Theme.AccentGlow, Thickness = 2.5}, 0.3, Enum.EasingStyle.Exponential)
             end
 
             task.wait(0.4)
 
-            for _, child in pairs(main_frame:GetDescendants()) do
+            for _, child in pairs(mainFrame:GetDescendants()) do
                 pcall(function()
                     if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-                        create_smooth_tween(child, {TextTransparency = 1}, 0.35)
+                        tween(child, {TextTransparency = 1}, 0.35, Enum.EasingStyle.Exponential)
                     end
                     if child:IsA("ImageLabel") then
-                        create_smooth_tween(child, {ImageTransparency = 1}, 0.35)
+                        tween(child, {ImageTransparency = 1}, 0.35, Enum.EasingStyle.Exponential)
                     end
                     if child:IsA("Frame") or child:IsA("TextButton") then
-                        create_smooth_tween(child, {BackgroundTransparency = 1}, 0.35)
+                        tween(child, {BackgroundTransparency = 1}, 0.35, Enum.EasingStyle.Exponential)
                     end
                     if child:IsA("UIStroke") then
-                        create_smooth_tween(child, {Transparency = 1}, 0.35)
+                        tween(child, {Transparency = 1}, 0.35, Enum.EasingStyle.Exponential)
                     end
                 end)
             end
 
             task.wait(0.2)
 
-            create_smooth_tween(main_frame, {
+            tween(mainFrame, {
                 Size = SUCCESS_SIZE,
                 BackgroundTransparency = 1
-            }, 0.5)
-            create_smooth_tween(shadow, {BackgroundTransparency = 1}, 0.4)
+            }, 0.5, Enum.EasingStyle.Exponential)
+            tween(shadow, {BackgroundTransparency = 1}, 0.4, Enum.EasingStyle.Exponential)
             if stroke then
-                create_smooth_tween(stroke, {Transparency = 1}, 0.4)
+                tween(stroke, {Transparency = 1}, 0.4, Enum.EasingStyle.Exponential)
             end
 
             task.wait(0.55)
-            screen_gui:Destroy()
-            load_script(key)
+            screenGui:Destroy()
+            loadScript(key)
         else
-            login_btn.Text = "Check Key"
-            if scan_bar and scan_bar.Parent then
-                scan_bar.BackgroundTransparency = 1
+            loginBtn.Text = "Check Key"
+            if scanBar and scanBar.Parent then
+                scanBar.BackgroundTransparency = 1
             end
-            create_tween(login_btn, {BackgroundTransparency = 0, BackgroundColor3 = Theme.Accent}, 0.2)
+            tween(loginBtn, {BackgroundTransparency = 0, BackgroundColor3 = Theme.Accent}, 0.2)
 
-            local is_expired = status.code == "KEY_EXPIRED"
-            if is_auto and is_expired then
-                delete_saved_key()
-                show_notification("Key Expired", "Saved key is no longer valid. Need a new key.", 4)
-            elseif is_auto then
-                delete_saved_key()
-                local err_msg = "Saved key invalid. Need a new key."
+            local expired = status.code == "KEY_EXPIRED"
+            if isAuto and expired then
+                deleteSavedKey()
+                notify("Key Expired", "Saved key is no longer valid. Need a new key.", 4)
+            elseif isAuto then
+                deleteSavedKey()
+                local msg = "Saved key invalid. Need a new key."
                 if status.code == "KEY_HWID_LOCKED" then
-                    err_msg = "HWID Locked! Reset in Discord"
+                    msg = "HWID Locked! Reset in Discord"
                 end
-                show_notification("Auth Error", err_msg, 4)
+                notify("Auth Error", msg, 4)
             else
-                handle_error()
-                local err_msg = "Invalid Key"
+                errorShake()
+                local msg = "Invalid Key"
                 if status.code == "KEY_HWID_LOCKED" then
-                    err_msg = "HWID Locked! Reset in Discord"
-                elseif is_expired then
-                    err_msg = "Key Expired. Need a new key."
-                    delete_saved_key()
+                    msg = "HWID Locked! Reset in Discord"
+                elseif expired then
+                    msg = "Key Expired. Need a new key."
+                    deleteSavedKey()
                 end
-                show_notification("Auth Error", err_msg, 3)
+                notify("Auth Error", msg, 3)
             end
-            auth_in_progress = false
+            authInProgress = false
         end
     end)
 end
 
-login_btn.MouseButton1Click:Connect(function()
-    local key = key_input.Text:gsub("%s+", "")
-    perform_key_check(key, false)
+loginBtn.MouseButton1Click:Connect(function()
+    local key = keyInput.Text:gsub("%s+", "")
+    checkKey(key, false)
 end)
 
-local function make_draggable(frame)
-    local dragging, drag_input, drag_start, start_pos
+local function makeDraggable(frame)
+    local dragging, dragInput, dragStart, startPos
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
-            drag_start = input.Position
-            start_pos = frame.Position
+            dragStart = input.Position
+            startPos = frame.Position
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -917,136 +941,131 @@ local function make_draggable(frame)
     end)
     frame.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement then
-            drag_input = input
+            dragInput = input
         end
     end)
-    user_input_service.InputChanged:Connect(function(input)
-        if input == drag_input and dragging then
-            local delta = input.Position - drag_start
-            create_tween(frame, {
-                Position = UDim2.new(
-                    start_pos.X.Scale, start_pos.X.Offset + delta.X,
-                    start_pos.Y.Scale, start_pos.Y.Offset + delta.Y
-                )
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            local x = startPos.X.Offset + delta.X
+            local y = startPos.Y.Offset + delta.Y
+            tween(frame, {
+                Position = UDim2.new(startPos.X.Scale, x, startPos.Y.Scale, y)
             }, 0.06, Enum.EasingStyle.Sine)
-            if shadow and shadow.Parent then
-                create_tween(shadow, {
-                    Position = UDim2.new(
-                        start_pos.X.Scale, start_pos.X.Offset + delta.X + 4,
-                        start_pos.Y.Scale, start_pos.Y.Offset + delta.Y + 4
-                    )
-                }, 0.08, Enum.EasingStyle.Sine)
-            end
+            tween(shadow, {
+                Position = UDim2.new(startPos.X.Scale, x, startPos.Y.Scale, y + 6)
+            }, 0.08, Enum.EasingStyle.Sine)
         end
     end)
 end
 
-make_draggable(main_frame)
+makeDraggable(mainFrame)
 
 task.spawn(function()
-    create_smooth_tween(shadow, {BackgroundTransparency = 0.6, Position = UDim2.new(0.5, 4, 0.5, 4), Size = SHADOW_SIZE}, 0.6)
+    tween(shadow, {BackgroundTransparency = 0.5, Position = UDim2.new(0.5, 0, 0.5, 6), Size = SHADOW_SIZE}, 0.6, Enum.EasingStyle.Exponential)
 
-    create_smooth_tween(main_frame, {BackgroundTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, 0)}, 0.5)
-    local main_stroke = main_frame:FindFirstChild("UIStroke")
-    if main_stroke then
-        create_smooth_tween(main_stroke, {Transparency = 0}, 0.5)
+    tween(mainFrame, {BackgroundTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, 0)}, 0.5, Enum.EasingStyle.Exponential)
+    local mainStroke = mainFrame:FindFirstChild("UIStroke")
+    if mainStroke then
+        tween(mainStroke, {Transparency = 0}, 0.5, Enum.EasingStyle.Exponential)
     end
-    create_bounce_tween(main_frame, {Size = MAIN_SIZE}, 0.8)
+    tween(mainFrame, {Size = MAIN_SIZE}, 0.8, Enum.EasingStyle.Back)
 
     task.wait(0.25)
 
-    create_smooth_tween(sidebar, {BackgroundTransparency = 0}, 0.45)
+    tween(sidebar, {BackgroundTransparency = 0}, 0.45, Enum.EasingStyle.Exponential)
     local divider = sidebar:FindFirstChild("Divider")
     if divider then
-        create_smooth_tween(divider, {BackgroundTransparency = 0}, 0.5)
+        tween(divider, {BackgroundTransparency = 0}, 0.5, Enum.EasingStyle.Exponential)
     end
 
     task.wait(0.12)
 
-    local avatar = avatar_container:FindFirstChild("Avatar")
+    local avatar = avatarContainer:FindFirstChild("Avatar")
     if avatar then
-        create_smooth_tween(avatar, {ImageTransparency = 0}, 0.45)
-        local avatar_stroke = avatar:FindFirstChild("UIStroke")
-        if avatar_stroke then
-            create_smooth_tween(avatar_stroke, {Transparency = 0}, 0.45)
+        tween(avatar, {ImageTransparency = 0}, 0.45, Enum.EasingStyle.Exponential)
+        local avatarStroke = avatar:FindFirstChild("UIStroke")
+        if avatarStroke then
+            tween(avatarStroke, {Transparency = 0}, 0.45, Enum.EasingStyle.Exponential)
         end
     end
 
     task.wait(0.06)
 
-    create_smooth_tween(discord_btn, {BackgroundTransparency = 0, TextTransparency = 0}, 0.4)
+    tween(discordBtn, {BackgroundTransparency = 0, TextTransparency = 0}, 0.4, Enum.EasingStyle.Exponential)
 
     task.wait(0.18)
 
-    typewriter(title_label, "Phantom Softworks", 0.045)
+    typeText(titleLabel, "Phantom Softworks", 0.045)
 
     task.wait(0.08)
 
-    typewriter(welcome_label, "Welcome, " .. local_player.DisplayName, 0.028)
+    typeText(welcomeLabel, "Welcome, " .. me.DisplayName, 0.028)
 
     task.wait(0.12)
 
-    create_smooth_tween(user_input_container, {BackgroundTransparency = 0}, 0.35)
-    local user_stroke = user_input_container:FindFirstChild("UIStroke")
-    if user_stroke then create_smooth_tween(user_stroke, {Transparency = 0}, 0.35) end
+    tween(userInputContainer, {BackgroundTransparency = 0}, 0.35, Enum.EasingStyle.Exponential)
+    local userStroke = userInputContainer:FindFirstChild("UIStroke")
+    if userStroke then tween(userStroke, {Transparency = 0}, 0.35, Enum.EasingStyle.Exponential) end
 
     task.wait(0.1)
 
-    create_smooth_tween(key_input_container, {BackgroundTransparency = 0}, 0.35)
-    local key_stroke = key_input_container:FindFirstChild("UIStroke")
-    if key_stroke then create_smooth_tween(key_stroke, {Transparency = 0}, 0.35) end
+    tween(keyInputContainer, {BackgroundTransparency = 0}, 0.35, Enum.EasingStyle.Exponential)
+    local keyStroke = keyInputContainer:FindFirstChild("UIStroke")
+    if keyStroke then tween(keyStroke, {Transparency = 0}, 0.35, Enum.EasingStyle.Exponential) end
+    tween(eyeBtn, {ImageTransparency = 0}, 0.35, Enum.EasingStyle.Exponential)
 
     task.wait(0.12)
 
-    create_smooth_tween(login_btn, {BackgroundTransparency = 0, TextTransparency = 0}, 0.35)
+    tween(loginBtn, {BackgroundTransparency = 0, TextTransparency = 0}, 0.35, Enum.EasingStyle.Exponential)
 
     task.spawn(function()
         task.wait(0.2)
 
-        local saved = load_saved_key()
+        local saved = loadSavedKey()
         if saved and saved ~= "" then
-            key_input.Text = saved
-            show_notification("Auto Login", "Checking saved key...", 2)
-            perform_key_check(saved, true)
+            keyInput.Text = saved
+            notify("Auto Login", "Checking saved key...", 2)
+            checkKey(saved, true)
         end
     end)
 
     task.wait(0.1)
 
-    create_smooth_tween(get_key_btn, {BackgroundTransparency = 1, TextTransparency = 0}, 0.35)
-    local getkey_stroke = get_key_btn:FindFirstChild("UIStroke")
-    if getkey_stroke then create_smooth_tween(getkey_stroke, {Transparency = 0}, 0.35) end
+    tween(getKeyBtn, {BackgroundTransparency = 1, TextTransparency = 0}, 0.35, Enum.EasingStyle.Exponential)
+    local getKeyStroke = getKeyBtn:FindFirstChild("UIStroke")
+    if getKeyStroke then tween(getKeyStroke, {Transparency = 0}, 0.35, Enum.EasingStyle.Exponential) end
 
     task.wait(0.1)
 
-    create_smooth_tween(buy_btn, {TextTransparency = 0}, 0.35)
-    local buy_stroke = buy_btn:FindFirstChild("UIStroke")
-    if buy_stroke then create_smooth_tween(buy_stroke, {Transparency = 0}, 0.35) end
+    tween(buyBtn, {TextTransparency = 0}, 0.35, Enum.EasingStyle.Exponential)
+    local buyStroke = buyBtn:FindFirstChild("UIStroke")
+    if buyStroke then tween(buyStroke, {Transparency = 0}, 0.35, Enum.EasingStyle.Exponential) end
 
     task.wait(0.3)
 
     task.spawn(function()
-        local av = avatar_container:FindFirstChild("Avatar")
+        local av = avatarContainer:FindFirstChild("Avatar")
         if not av then return end
-        local av_stroke = av:FindFirstChild("UIStroke")
-        if not av_stroke then return end
-        while av and av.Parent and av_stroke and av_stroke.Parent do
-            create_tween(av_stroke, {Thickness = 3, Color = Color3.fromRGB(120, 120, 120)}, 1.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+        local avStroke = av:FindFirstChild("UIStroke")
+        if not avStroke then return end
+        while av and av.Parent and avStroke and avStroke.Parent do
+            tween(avStroke, {Thickness = 3, Color = Theme.AccentGlow}, 1.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
             task.wait(1.8)
             if not av or not av.Parent then break end
-            create_tween(av_stroke, {Thickness = 2, Color = Theme.TitleBarLine}, 1.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+            tween(avStroke, {Thickness = 2, Color = Theme.TitleBarLine}, 1.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
             task.wait(1.8)
         end
     end)
 
     task.spawn(function()
-        while main_frame and main_frame.Parent do
-            local ms = main_frame:FindFirstChild("UIStroke")
+        while mainFrame and mainFrame.Parent do
+            local ms = mainFrame:FindFirstChild("UIStroke")
             if ms then
-                create_tween(ms, {Color = Color3.fromRGB(65, 65, 65)}, 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+                tween(ms, {Color = Theme.AccentGlow}, 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
                 task.wait(2)
-                if not main_frame or not main_frame.Parent then break end
-                create_tween(ms, {Color = Theme.Border}, 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+                if not mainFrame or not mainFrame.Parent then break end
+                tween(ms, {Color = Theme.Border}, 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
                 task.wait(2)
             else
                 break
