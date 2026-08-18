@@ -796,7 +796,7 @@ buyBtn.MouseButton1Click:Connect(function()
 end)
 
 getKeyBtn.MouseButton1Click:Connect(function()
-    openUrl("https://ads.luarmor.net/get_key?for=Checkpoints_Lootlabs-ImvwfHuyshbf")
+    openUrl("www.phantomarket.org/rout")
     notify("Key System", "Key link copied. Paste it in your browser", 5)
 end)
 
