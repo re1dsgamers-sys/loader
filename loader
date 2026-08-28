@@ -39,6 +39,7 @@ local GAME_SCRIPTS = {
     ["SailorPiece"] = "66387fa15569b822d2ea55a5faabe87c",
     ["SlimeRNG"] = "7a8b76f35bce8a800da3cd7aad830bcd",
     ["TypeSoul"] = "5f6af3cb21fee478aa17493db9e1853b",
+    ["Violence District"] = "b788ceefa4a0c32bd78003c2d3618109",
     ["Default"] = "18fa0aa2984290b5582813fe581dd4cf"
 }
 
@@ -76,6 +77,8 @@ local function detectGame()
         or pid == 79007765026427 or pid == 121766282797354 or pid == 115509275831248
         or pid == 108123877604820 or pid == 122291183918016 or pid == 138059541435332 or pid == 18637069183 then
         return GAME_SCRIPTS["TypeSoul"]
+    elseif pid == 93978595733734 then
+        return GAME_SCRIPTS["Violence District"]
     end
     return GAME_SCRIPTS["Default"]
 end
