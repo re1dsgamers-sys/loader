@@ -40,7 +40,9 @@ local GAME_SCRIPTS = {
     ["SlimeRNG"] = "7a8b76f35bce8a800da3cd7aad830bcd",
     ["TypeSoul"] = "5f6af3cb21fee478aa17493db9e1853b",
     ["Violence District"] = "b788ceefa4a0c32bd78003c2d3618109",
+    ["99 Nights in the Forest"] = "5608e43c201375a9258c222f324abfa1",
     ["Default"] = "18fa0aa2984290b5582813fe581dd4cf"
+    
 }
 
 local function detectGame()
@@ -79,6 +81,8 @@ local function detectGame()
         return GAME_SCRIPTS["TypeSoul"]
     elseif pid == 93978595733734 then
         return GAME_SCRIPTS["Violence District"]
+    elseif pid == 79546208627805 or pid == 126371807511901 or pid == 126509999114328 then
+        return GAME_SCRIPTS["99 Nights in the Forest"]
     end
     return GAME_SCRIPTS["Default"]
 end
