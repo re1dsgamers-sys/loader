@@ -35,7 +35,6 @@ end
 local GAME_SCRIPTS = {
     ["Rivals"] = "f734cbc6d30b72abe044a3fb60543345",
     ["Flick"] = "9a65bec4c321b3f25f47a860831e9b2d",
-    ["BladeBall"] = "f4b067ed49f105456b6b3900bc1a4ef9",
     ["SailorPiece"] = "66387fa15569b822d2ea55a5faabe87c",
     ["SlimeRNG"] = "7a8b76f35bce8a800da3cd7aad830bcd",
     ["TypeSoul"] = "5f6af3cb21fee478aa17493db9e1853b",
@@ -51,14 +50,6 @@ local function detectGame()
         return GAME_SCRIPTS["Rivals"]
     elseif pid == 136801880565837 or pid == 4902182837 then
         return GAME_SCRIPTS["Flick"]
-    elseif pid == 13772394625 or pid == 14368557094 or pid == 14732610803 or pid == 14915220621
-        or pid == 15131065025 or pid == 15144787112 or pid == 15185247558 or pid == 15234596844
-        or pid == 15264892126 or pid == 15509350986 or pid == 15517169103 or pid == 15552588346
-        or pid == 15582821022 or pid == 15582823307 or pid == 16044264830 or pid == 16281300371
-        or pid == 16331595046 or pid == 16331596518 or pid == 16331598816 or pid == 16331600459
-        or pid == 16456370330 or pid == 16581637217 or pid == 16581648071 or pid == 17757592456
-        or pid == 92458008626219 or pid == 111661204337143 then
-        return GAME_SCRIPTS["BladeBall"]
     elseif pid == 77747658251236 or pid == 123955125827131 or pid == 75159314259063
         or pid == 99684056491472 or pid == 96767841099256 or pid == 138368689293913
         or pid == 130167267952199 or pid == 98826438856089 or pid == 75982168454032 then
