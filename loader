@@ -1,6 +1,17 @@
 repeat task.wait() until game:IsLoaded()
 
-local sdk = loadstring(game:HttpGet("https://sdkapi-public.luarmor.net/library.lua"))()
+local sdk
+for _ = 1, 3 do
+    local ok, lib = pcall(function()
+        return loadstring(game:HttpGet("https://sdkapi-public.luarmor.net/library.lua"))()
+    end)
+    if ok and type(lib) == "table" then
+        sdk = lib
+        break
+    end
+    task.wait(1)
+end
+sdk = sdk or {}
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -41,11 +52,22 @@ local GAME_SCRIPTS = {
     ["Violence District"] = "b788ceefa4a0c32bd78003c2d3618109",
     ["99 Nights in the Forest"] = "5608e43c201375a9258c222f324abfa1",
     ["Default"] = "18fa0aa2984290b5582813fe581dd4cf"
-    
+}
+
+local KEYLESS = {
+    [GAME_SCRIPTS["Rivals"]] = true
 }
 
 local function detectGame()
     local pid = game.PlaceId
+    local ok, info = pcall(function()
+        return game:GetService("MarketplaceService"):GetProductInfo(pid)
+    end)
+    local gameName = ok and type(info) == "table" and tostring(info.Name) or ""
+
+    if gameName:upper():find("RIVALS") then
+        return GAME_SCRIPTS["Rivals"]
+    end
     if pid == 17625359962 or pid == 18126510175 or pid == 71874690745115 or pid == 117398147513099 or pid == 129604661913557 then
         return GAME_SCRIPTS["Rivals"]
     elseif pid == 136801880565837 or pid == 4902182837 then
@@ -78,7 +100,8 @@ local function detectGame()
     return GAME_SCRIPTS["Default"]
 end
 
-sdk.script_id = detectGame()
+local scriptId = detectGame()
+sdk.script_id = scriptId
 
 local actorRun = rawget(getfenv(0), "run_on_actor")
 local actorGet = rawget(getfenv(0), "getactors") or rawget(getfenv(0), "get_actors")
@@ -105,11 +128,10 @@ local function runOnActor(src, key)
         if key and key ~= "" then
             pcall(function() getgenv().script_key = key end)
         end
-        local ok, err = pcall(function()
+        pcall(function()
             local chunk = loadstring(src)
             if chunk then chunk() end
         end)
-        if not ok then warn("[Loader][Actor] " .. tostring(err)) end
     ]]
     local ok, err = pcall(function()
         actorRun(actor, wrapper, src, key or "")
@@ -129,7 +151,7 @@ local function fetchSource(hash)
 end
 
 local function loadScript(key)
-    local hash = sdk.script_id
+    local hash = scriptId
     local src = fetchSource(hash)
     if src then
         local actorOk = runOnActor(src, key)
@@ -145,8 +167,21 @@ local function loadScript(key)
         if directOk then return true end
     end
 
-    local ok = pcall(function() sdk.load_script() end)
+    local ok = pcall(function()
+        if type(sdk.load_script) == "function" then sdk.load_script() end
+    end)
     return ok
+end
+
+local function checkKeyStatus(key)
+    for _ = 1, 3 do
+        local ok, status = pcall(function() return sdk.check_key(key) end)
+        if ok and type(status) == "table" and type(status.code) == "string" then
+            return status
+        end
+        task.wait(1)
+    end
+    return nil
 end
 
 local KEY_FOLDER = "KEY"
@@ -198,6 +233,11 @@ local function deleteSavedKey()
 end
 
 ensureKeyFolder()
+
+local function runKeyless()
+    getgenv().script_key = nil
+    loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/" .. scriptId .. ".lua"))()
+end
 
 local Theme = {
     Background = Color3.fromRGB(14, 4, 6),
@@ -800,6 +840,53 @@ end)
 
 local authInProgress = false
 
+local function finishAndLoad(run)
+    if scanBar and scanBar.Parent then
+        tween(scanBar, {Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 0.7}, 0.3, Enum.EasingStyle.Exponential)
+        task.wait(0.2)
+        tween(scanBar, {BackgroundTransparency = 1}, 0.3, Enum.EasingStyle.Exponential)
+    end
+
+    local stroke = mainFrame:FindFirstChild("UIStroke")
+    if stroke then
+        tween(stroke, {Color = Theme.AccentGlow, Thickness = 2.5}, 0.3, Enum.EasingStyle.Exponential)
+    end
+
+    task.wait(0.4)
+
+    for _, child in pairs(mainFrame:GetDescendants()) do
+        pcall(function()
+            if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
+                tween(child, {TextTransparency = 1}, 0.35, Enum.EasingStyle.Exponential)
+            end
+            if child:IsA("ImageLabel") then
+                tween(child, {ImageTransparency = 1}, 0.35, Enum.EasingStyle.Exponential)
+            end
+            if child:IsA("Frame") or child:IsA("TextButton") then
+                tween(child, {BackgroundTransparency = 1}, 0.35, Enum.EasingStyle.Exponential)
+            end
+            if child:IsA("UIStroke") then
+                tween(child, {Transparency = 1}, 0.35, Enum.EasingStyle.Exponential)
+            end
+        end)
+    end
+
+    task.wait(0.2)
+
+    tween(mainFrame, {
+        Size = SUCCESS_SIZE,
+        BackgroundTransparency = 1
+    }, 0.5, Enum.EasingStyle.Exponential)
+    tween(shadow, {BackgroundTransparency = 1}, 0.4, Enum.EasingStyle.Exponential)
+    if stroke then
+        tween(stroke, {Transparency = 1}, 0.4, Enum.EasingStyle.Exponential)
+    end
+
+    task.wait(0.55)
+    screenGui:Destroy()
+    run()
+end
+
 local function checkKey(key, isAuto)
     if authInProgress then return end
     if not key or key == "" then
@@ -832,58 +919,25 @@ local function checkKey(key, isAuto)
     end)
 
     task.spawn(function()
-        local status = sdk.check_key(key)
+        local status = checkKeyStatus(key)
         scanActive = false
+
+        if not status then
+            loginBtn.Text = "Check Key"
+            if scanBar and scanBar.Parent then
+                scanBar.BackgroundTransparency = 1
+            end
+            tween(loginBtn, {BackgroundTransparency = 0, BackgroundColor3 = Theme.Accent}, 0.2)
+            notify("Connection Error", "Could not reach the key server. Try again.", 4)
+            authInProgress = false
+            return
+        end
 
         if status.code == "KEY_VALID" then
             getgenv().script_key = key
             saveKey(key)
             notify("Success", "Key Validated! Loading...", 3)
-
-            if scanBar and scanBar.Parent then
-                tween(scanBar, {Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 0.7}, 0.3, Enum.EasingStyle.Exponential)
-                task.wait(0.2)
-                tween(scanBar, {BackgroundTransparency = 1}, 0.3, Enum.EasingStyle.Exponential)
-            end
-
-            local stroke = mainFrame:FindFirstChild("UIStroke")
-            if stroke then
-                tween(stroke, {Color = Theme.AccentGlow, Thickness = 2.5}, 0.3, Enum.EasingStyle.Exponential)
-            end
-
-            task.wait(0.4)
-
-            for _, child in pairs(mainFrame:GetDescendants()) do
-                pcall(function()
-                    if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-                        tween(child, {TextTransparency = 1}, 0.35, Enum.EasingStyle.Exponential)
-                    end
-                    if child:IsA("ImageLabel") then
-                        tween(child, {ImageTransparency = 1}, 0.35, Enum.EasingStyle.Exponential)
-                    end
-                    if child:IsA("Frame") or child:IsA("TextButton") then
-                        tween(child, {BackgroundTransparency = 1}, 0.35, Enum.EasingStyle.Exponential)
-                    end
-                    if child:IsA("UIStroke") then
-                        tween(child, {Transparency = 1}, 0.35, Enum.EasingStyle.Exponential)
-                    end
-                end)
-            end
-
-            task.wait(0.2)
-
-            tween(mainFrame, {
-                Size = SUCCESS_SIZE,
-                BackgroundTransparency = 1
-            }, 0.5, Enum.EasingStyle.Exponential)
-            tween(shadow, {BackgroundTransparency = 1}, 0.4, Enum.EasingStyle.Exponential)
-            if stroke then
-                tween(stroke, {Transparency = 1}, 0.4, Enum.EasingStyle.Exponential)
-            end
-
-            task.wait(0.55)
-            screenGui:Destroy()
-            loadScript(key)
+            finishAndLoad(function() loadScript(key) end)
         else
             loginBtn.Text = "Check Key"
             if scanBar and scanBar.Parent then
@@ -959,6 +1013,17 @@ end
 
 makeDraggable(mainFrame)
 
+if KEYLESS[scriptId] then
+    authInProgress = true
+    task.spawn(function()
+        task.wait(0.8)
+        notify("Keyless", "Rivals is Keyless for a Week", 3)
+        loginBtn.Text = "Loading..."
+        task.wait(1.2)
+        finishAndLoad(runKeyless)
+    end)
+end
+
 task.spawn(function()
     tween(shadow, {BackgroundTransparency = 0.5, Position = UDim2.new(0.5, 0, 0.5, 6), Size = SHADOW_SIZE}, 0.6, Enum.EasingStyle.Exponential)
 
@@ -1019,6 +1084,8 @@ task.spawn(function()
 
     task.spawn(function()
         task.wait(0.2)
+
+        if KEYLESS[scriptId] then return end
 
         local saved = loadSavedKey()
         if saved and saved ~= "" then
