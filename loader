@@ -44,7 +44,7 @@ local function tween(obj, props, dur, ease, dir)
 end
 
 local spgame = {
-    ["Rivals"] = {id = "273a603fadb1be1bc422ad33b6473107", keyless = false},
+    ["Rivals"] = {id = "f734cbc6d30b72abe044a3fb60543345", keyless = false},
     ["Flick"] = {id = "9a65bec4c321b3f25f47a860831e9b2d", keyless = false},
     ["SailorPiece"] = {id = "66387fa15569b822d2ea55a5faabe87c", keyless = false},
     ["SlimeRNG"] = {id = "7a8b76f35bce8a800da3cd7aad830bcd", keyless = false},
