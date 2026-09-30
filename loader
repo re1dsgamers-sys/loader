@@ -1,2 +1,1 @@
-script_key = "%KEY%"
-loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/ae83512f83260679c8f5c531faac28e611f9d9b1840e1ad1c98e3494d7aa999d.lua"))()
+loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/ceed9eacb6ed7beed813fb8dae2154b6.lua"))()
