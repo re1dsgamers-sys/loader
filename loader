@@ -489,7 +489,7 @@ local screenGui = new("ScreenGui", {
 })
 
 local adFrame = new("ImageButton", {
-    Name = "LifetimeAd",
+    Name = "FuckassAd",
     Parent = screenGui,
     AnchorPoint = Vector2.new(1, 0),
     Position = UDim2.new(1, -16, 0, 16),
