@@ -90,33 +90,33 @@ local function detectGame()
         return "TypeSoul"
     elseif pid == 93978595733734 then
         return "Violence District"
-    elseif pid == 13772394625 
-   or pid == 14368557094 
-   or pid == 14732610803 
-   or pid == 14915220621 
-   or pid == 15131065025 
-   or pid == 15144787112 
-   or pid == 15185247558 
-   or pid == 15234596844 
-   or pid == 15264892126 
-   or pid == 15509350986 
-   or pid == 15517169103 
-   or pid == 15552588346 
-   or pid == 15582821022 
-   or pid == 15582823307 
-   or pid == 16044264830 
-   or pid == 16281300371 
-   or pid == 16331595046 
-   or pid == 16331596518 
-   or pid == 16331598816 
-   or pid == 16331600459 
-   or pid == 16456370330 
-   or pid == 16581637217 
-   or pid == 16581648071 
-   or pid == 17757592456 
-   or pid == 71039363739363 
-   or pid == 92458008626219 
-   or pid == 97204747083036 
+    elseif pid == 13772394625
+   or pid == 14368557094
+   or pid == 14732610803
+   or pid == 14915220621
+   or pid == 15131065025
+   or pid == 15144787112
+   or pid == 15185247558
+   or pid == 15234596844
+   or pid == 15264892126
+   or pid == 15509350986
+   or pid == 15517169103
+   or pid == 15552588346
+   or pid == 15582821022
+   or pid == 15582823307
+   or pid == 16044264830
+   or pid == 16281300371
+   or pid == 16331595046
+   or pid == 16331596518
+   or pid == 16331598816
+   or pid == 16331600459
+   or pid == 16456370330
+   or pid == 16581637217
+   or pid == 16581648071
+   or pid == 17757592456
+   or pid == 71039363739363
+   or pid == 92458008626219
+   or pid == 97204747083036
    or pid == 111661204337143 then
     return "Testing"
 
@@ -487,6 +487,46 @@ local screenGui = new("ScreenGui", {
     Name = "PhantomLoader",
     Parent = CoreGui
 })
+
+local adFrame = new("ImageButton", {
+    Name = "LifetimeAd",
+    Parent = screenGui,
+    AnchorPoint = Vector2.new(1, 0),
+    Position = UDim2.new(1, -16, 0, 16),
+    Size = isMobile and UDim2.new(0, 210, 0, 140) or UDim2.new(0, 330, 0, 220),
+    BackgroundTransparency = 1,
+    Image = "rbxassetid://137178730033132",
+    ScaleType = Enum.ScaleType.Fit,
+    AutoButtonColor = false,
+    ZIndex = 20
+}, {
+    new("UICorner", {CornerRadius = UDim.new(0, 6)})
+})
+
+local adClose = new("TextButton", {
+    Parent = adFrame,
+    AnchorPoint = Vector2.new(1, 0),
+    Position = UDim2.new(1, -6, 0, 6),
+    Size = UDim2.new(0, 24, 0, 24),
+    BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+    BackgroundTransparency = 0.4,
+    Text = "X",
+    Font = FONT_BOLD,
+    TextColor3 = Color3.fromRGB(255, 255, 255),
+    TextSize = 14,
+    AutoButtonColor = false,
+    ZIndex = 21
+}, {
+    new("UICorner", {CornerRadius = UDim.new(1, 0)})
+})
+
+adClose.MouseButton1Click:Connect(function()
+    adClose.Visible = false
+    tween(adFrame, {ImageTransparency = 1}, 0.25)
+    task.delay(0.25, function()
+        if adFrame.Parent then adFrame:Destroy() end
+    end)
+end)
 
 local shadow = new("Frame", {
     Name = "Shadow",
@@ -910,7 +950,7 @@ local function setKeyTime(status)
     elseif expire <= 0 then
         setTimeLeft("Lifetime")
     else
-        setTimeLeft(formatLeft(expire - os.time()))
+    setTimeLeft(formatLeft(expire - os.time()))
     end
 end
 
@@ -1078,6 +1118,11 @@ local function openUrl(url)
 end
 
 buyBtn.MouseButton1Click:Connect(function()
+    openUrl("https://phantomarket.org")
+    notify("Premium Shop", "Shop link copied. Paste it in your browser", 5)
+end)
+
+adFrame.MouseButton1Click:Connect(function()
     openUrl("https://phantomarket.org")
     notify("Premium Shop", "Shop link copied. Paste it in your browser", 5)
 end)
