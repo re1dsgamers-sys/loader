@@ -1134,7 +1134,7 @@ adFrame.MouseButton1Click:Connect(function()
 end)
 
 getKeyBtn.MouseButton1Click:Connect(function()
-    openUrl("https://www.phantomarket.org/key")
+    openUrl("https://ads.luarmor.net/get_key?for=Checkpoints_Linkvertise-HSVJWPYAuoAP")
     notify("Key System", "Key link copied. Paste it in your browser", 5)
 end)
 
