@@ -53,6 +53,7 @@ local spgame = {
     ["99 Nights in the Forest"] = {id = "5608e43c201375a9258c222f324abfa1", keyless = false},
     ["Blox Strike"] = {id = "60789613698589c1b6ddc8743b863e92", keyless = false},
     ["Testing"] = {id = "01d914a84a7820ad4557e6dfef622461", keyless = false},
+    ["Forsaken"] = {id = "132ddb9c605467ff18000e688d71f7e3", keyless = false},
 }
 
 local function detectGame()
@@ -126,6 +127,8 @@ local function detectGame()
     or pid == 117218892712785 or pid == 122102693569834 or pid == 128037611684480
     or pid == 132331296438894 or pid == 135434213652028 then
     return "Blox Strike"
+    elseif pid == 18687417158 or pid == 83645629621104 or pid == 86454545238517 or pid == 94626476208514 or pid == 106560117662077 then
+        return "Forsaken"
     elseif pid == 79546208627805 or pid == 126371807511901 or pid == 126509999114328 then
         return "99 Nights in the Forest"
     end
