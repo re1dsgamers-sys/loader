@@ -55,6 +55,7 @@ local spgame = {
     ["Testing"] = {id = "01d914a84a7820ad4557e6dfef622461", keyless = false},
     ["Forsaken"] = {id = "132ddb9c605467ff18000e688d71f7e3", keyless = false},
     ["Doors"] = {id = "06cf2bd31458e0c320f5f081824c7a68", keyless = false},
+    ["Anime Adventures"] = {id = "01cba28aef14bfbbbbb1759bec21d21f", keyless = false},
 }
 
 local function detectGame()
@@ -67,7 +68,9 @@ local function detectGame()
     if gameName:upper():find("RIVALS") then
         return "Rivals"
     end
-    if pid == 17625359962 or pid == 18126510175 or pid == 71874690745115 or pid == 117398147513099 or pid == 129604661913557 then
+
+    if pid == 17625359962 or pid == 18126510175 or pid == 71874690745115
+        or pid == 117398147513099 or pid == 129604661913557 then
         return "Rivals"
     elseif pid == 136801880565837 or pid == 4902182837 then
         return "Flick"
@@ -89,53 +92,42 @@ local function detectGame()
         or pid == 88570549485653 or pid == 18214402201 or pid == 17497925847
         or pid == 85663041002311 or pid == 126276657485357 or pid == 116052447681870
         or pid == 79007765026427 or pid == 121766282797354 or pid == 115509275831248
-        or pid == 108123877604820 or pid == 122291183918016 or pid == 138059541435332 or pid == 18637069183 then
+        or pid == 108123877604820 or pid == 122291183918016 or pid == 138059541435332
+        or pid == 18637069183 then
         return "TypeSoul"
     elseif pid == 93978595733734 then
         return "Violence District"
-    elseif pid == 13772394625
-   or pid == 14368557094
-   or pid == 14732610803
-   or pid == 14915220621
-   or pid == 15131065025
-   or pid == 15144787112
-   or pid == 15185247558
-   or pid == 15234596844
-   or pid == 15264892126
-   or pid == 15509350986
-   or pid == 15517169103
-   or pid == 15552588346
-   or pid == 15582821022
-   or pid == 15582823307
-   or pid == 16044264830
-   or pid == 16281300371
-   or pid == 16331595046
-   or pid == 16331596518
-   or pid == 16331598816
-   or pid == 16331600459
-   or pid == 16456370330
-   or pid == 16581637217
-   or pid == 16581648071
-   or pid == 17757592456
-   or pid == 71039363739363
-   or pid == 92458008626219
-   or pid == 97204747083036
-   or pid == 111661204337143 then
-    return "Testing"
+    elseif pid == 13772394625 or pid == 14368557094 or pid == 14732610803
+        or pid == 14915220621 or pid == 15131065025 or pid == 15144787112
+        or pid == 15185247558 or pid == 15234596844 or pid == 15264892126
+        or pid == 15509350986 or pid == 15517169103 or pid == 15552588346
+        or pid == 15582821022 or pid == 15582823307 or pid == 16044264830
+        or pid == 16281300371 or pid == 16331595046 or pid == 16331596518
+        or pid == 16331598816 or pid == 16331600459 or pid == 16456370330
+        or pid == 16581637217 or pid == 16581648071 or pid == 17757592456
+        or pid == 71039363739363 or pid == 92458008626219 or pid == 97204747083036
+        or pid == 111661204337143 then
+        return "Testing"
     elseif pid == 70595076397764 or pid == 75364289796924 or pid == 76687220566327
-    or pid == 84731941097645 or pid == 86299871106535 or pid == 101836176558619
-    or pid == 103953226898816 or pid == 108194354348181 or pid == 114234929420007
-    or pid == 117218892712785 or pid == 122102693569834 or pid == 128037611684480
-    or pid == 132331296438894 or pid == 135434213652028 then
-    return "Blox Strike"
-    elseif pid == 18687417158 or pid == 83645629621104 or pid == 86454545238517 or pid == 94626476208514 or pid == 106560117662077 then
+        or pid == 84731941097645 or pid == 86299871106535 or pid == 101836176558619
+        or pid == 103953226898816 or pid == 108194354348181 or pid == 114234929420007
+        or pid == 117218892712785 or pid == 122102693569834 or pid == 128037611684480
+        or pid == 132331296438894 or pid == 135434213652028 then
+        return "Blox Strike"
+    elseif pid == 18687417158 or pid == 83645629621104 or pid == 86454545238517
+        or pid == 94626476208514 or pid == 106560117662077 then
         return "Forsaken"
-    elseif pid == 6516141723 or pid == 6516141723 or pid == 6839171747 or pid == 10549820578 or pid == 12308344607 or pid == 87716067947993
-    or pid == 110258689672367 then
+    elseif pid == 6516141723 or pid == 6839171747 or pid == 10549820578
+        or pid == 12308344607 or pid == 87716067947993 or pid == 110258689672367 then
         return "Doors"
     elseif pid == 79546208627805 or pid == 126371807511901 or pid == 126509999114328 then
         return "99 Nights in the Forest"
+    elseif pid == 8304191830 or pid == 8349889591 or pid == 10098525303
+        or pid == 14229762361 or pid == 14229839966 or pid == 14918509670
+        or game.GameId == 3183403065 then
+        return "Anime Adventures"
     end
+
     return "Default"
 end
 
