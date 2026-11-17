@@ -55,7 +55,7 @@ local spgame = {
     ["Testing"] = {id = "01d914a84a7820ad4557e6dfef622461", keyless = false},
     ["Forsaken"] = {id = "132ddb9c605467ff18000e688d71f7e3", keyless = false},
     ["Doors"] = {id = "06cf2bd31458e0c320f5f081824c7a68", keyless = false},
-    ["Anime Adventures"] = {id = "01cba28aef14bfbbbbb1759bec21d21f", keyless = false},
+    ["Huepik"] = {id = "01cba28aef14bfbbbbb1759bec21d21f", keyless = false},
 }
 
 local function detectGame()
@@ -125,7 +125,7 @@ local function detectGame()
     elseif pid == 8304191830 or pid == 8349889591 or pid == 10098525303
         or pid == 14229762361 or pid == 14229839966 or pid == 14918509670
         or game.GameId == 3183403065 then
-        return "Anime Adventures"
+        return "Huepik"
     end
 
     return "Default"
