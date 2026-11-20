@@ -56,6 +56,7 @@ local spgame = {
     ["Forsaken"] = {id = "132ddb9c605467ff18000e688d71f7e3", keyless = false},
     ["Doors"] = {id = "06cf2bd31458e0c320f5f081824c7a68", keyless = false},
     ["Huepik"] = {id = "01cba28aef14bfbbbbb1759bec21d21f", keyless = false},
+    ["Default"] = {id = "79fc8a8e991294cd55e7ee988da4b8c5", keyless = true},
 }
 
 local function detectGame()
